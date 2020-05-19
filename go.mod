@@ -21,7 +21,7 @@ require (
 	github.com/fatih/color v1.7.0
 	github.com/go-macaron/binding v0.0.0-20190806013118-0b4f37bab25b
 	github.com/go-macaron/gzip v0.0.0-20160222043647-cad1c6580a07
-	github.com/go-macaron/session v0.0.0-20190805070824-1a3cdc6f5659
+	github.com/go-macaron/session v0.0.0-20200329073812-7d919ce6a8d2
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-stack/stack v1.8.0
 	github.com/gobwas/glob v0.2.3
@@ -81,7 +81,7 @@ require (
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/ini.v1 v1.46.0
 	gopkg.in/ldap.v3 v3.0.2
-	gopkg.in/macaron.v1 v1.3.4
+	gopkg.in/macaron.v1 v1.3.8
 	gopkg.in/mail.v2 v2.3.1
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/square/go-jose.v2 v2.4.1
