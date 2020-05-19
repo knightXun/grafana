@@ -83,7 +83,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(nebula_graphd_storageClient_error_qps_avg_3600{kubernetes_namespace=\"nebula-monitor\"})",
+          "expr": "count(nebula_graphd_storageClient_error_qps_avg_3600{kubernetes_namespace=\"NEBULA_NAMESPACE\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -169,7 +169,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(nebula_graphd_storageClient_error_qps_avg_3600{kubernetes_namespace=\"nebula-monitor\"})",
+          "expr": "count(nebula_graphd_storageClient_error_qps_avg_3600{kubernetes_namespace=\"NEBULA_NAMESPACE\"})",
           "interval": "",
           "legendFormat": "",
           "refId": "A"

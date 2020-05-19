@@ -77,6 +77,13 @@ if [ ! -z "${GF_INSTALL_PLUGINS}" ]; then
   done
 fi
 
+if [ -z "${NEBULA_NAMESPACE}" ]; then
+  echo "Empty NEBULA_NAMESPACE!!!"
+  exit 1
+fi
+
+sed -i 's/NEBULA_NAMESPACE/'"$NEBULA_NAMESPACE"'/g' /etc/grafana/provisioning/nebula.json
+
 exec grafana-server                                         \
   --homepath="$GF_PATHS_HOME"                               \
   --config="$GF_PATHS_CONFIG"                               \

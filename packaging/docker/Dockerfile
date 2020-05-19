@@ -59,6 +59,10 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
 
 EXPOSE 3000
 
+COPY default_conf/nebula.json /etc/grafana/provisioning/
+COPY default_conf/provisioning/dashboards/dashboards.yaml /etc/grafana/provisioning/dashboards
+COPY default_conf/provisioning/datasources/prometeus-sources.yaml /etc/grafana/provisioning/datasources/
+
 COPY ./run.sh /run.sh
 
 USER grafana
