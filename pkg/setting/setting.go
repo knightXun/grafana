@@ -246,6 +246,7 @@ type Cfg struct {
 
 	// Security
 	DisableInitAdminCreation         bool
+	EnableDefaultGuestCreation       bool
 	DisableBruteForceLoginProtection bool
 	CookieSecure                     bool
 	CookieSameSiteDisabled           bool
@@ -792,6 +793,7 @@ func (cfg *Cfg) Load(args *CommandLineArgs) error {
 
 	// admin
 	cfg.DisableInitAdminCreation = security.Key("disable_initial_admin_creation").MustBool(false)
+	cfg.EnableDefaultGuestCreation = security.Key("enable_default_guest_creation").MustBool(false)
 	AdminUser, err = valueAsString(security, "admin_user", "")
 	if err != nil {
 		return err
