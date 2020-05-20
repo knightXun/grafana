@@ -33,12 +33,6 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 
 	hs.log.Info("Handle User Login", userName, token)
 
-	//prefsQuery := models.GetPreferencesWithDefaultsQuery{User: c.SignedInUser}
-	//if err := bus.Dispatch(&prefsQuery); err != nil {
-	//	return nil, err
-	//}
-	//prefs := prefsQuery.Result
-
 	// Read locale from acccept-language
 	acceptLang := c.Req.Header.Get("Accept-Language")
 	locale := "en-US"
@@ -103,6 +97,8 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 		data.User.GravatarUrl = setting.AppSubUrl + "/public/img/user_profile.png"
 	}
 
+	fmt.Println("IndexTokenView setting.AppSubUrl == ", setting.AppSubUrl)
+
 	if len(data.User.Name) == 0 {
 		data.User.Name = data.User.Login
 	}
@@ -152,18 +148,6 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 				{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
 			},
 		}
-
-		//if !setting.DisableSignoutMenu {
-		//	// add sign out first
-		//	profileNode.Children = append(profileNode.Children, &dtos.NavLink{
-		//		Text:         "Sign out",
-		//		Id:           "sign-out",
-		//		Url:          setting.AppSubUrl + "/logout",
-		//		Icon:         "arrow-from-right",
-		//		Target:       "_self",
-		//		HideFromTabs: true,
-		//	})
-		//}
 
 		data.NavTree = append(data.NavTree, profileNode)
 	}
@@ -437,8 +421,8 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 			Url:          setting.AppSubUrl + "/profile",
 			HideFromMenu: true,
 			SortWeight:   dtos.WeightProfile,
-			Children: []*dtos.NavLink{
-				{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
+			Children:     []*dtos.NavLink{
+				//{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
 				//{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
 			},
 		}
@@ -446,6 +430,8 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 		if c.OrgRole != models.ROLE_VIEWER {
 			profileNode.Children = append(profileNode.Children,
 				&dtos.NavLink{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true})
+			profileNode.Children = append(profileNode.Children,
+				&dtos.NavLink{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"})
 		}
 
 		if !setting.DisableSignoutMenu {
@@ -463,6 +449,7 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 		data.NavTree = append(data.NavTree, profileNode)
 	}
 
+	fmt.Println("LoginView setting.AppSubUrl == ", setting.AppSubUrl)
 	if setting.AlertingEnabled && (c.OrgRole == models.ROLE_ADMIN || c.OrgRole == models.ROLE_EDITOR) {
 		alertChildNavs := []*dtos.NavLink{
 			{Text: "Alert Rules", Id: "alert-list", Url: setting.AppSubUrl + "/alerting/list", Icon: "list-ul"},
