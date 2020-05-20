@@ -242,6 +242,7 @@ type Cfg struct {
 	ImagesDir                      string
 	RendererUrl                    string
 	RendererCallbackUrl            string
+	GuestPassword                  string
 	RendererConcurrentRequestLimit int
 
 	// Security
@@ -793,8 +794,9 @@ func (cfg *Cfg) Load(args *CommandLineArgs) error {
 
 	// admin
 	cfg.DisableInitAdminCreation = security.Key("disable_initial_admin_creation").MustBool(false)
-	cfg.EnableDefaultGuestCreation = security.Key("enable_default_guest_creation").MustBool(false)
-	fmt.Println("enable_default_guest_creation: ", cfg.EnableDefaultGuestCreation)
+	cfg.EnableDefaultGuestCreation = security.Key("enable_default_guest_creation").MustBool(true)
+	cfg.GuestPassword = security.Key("guest_password").MustString("guestguestguest")
+	fmt.Println("guest_password: ", cfg.GuestPassword)
 
 	AdminUser, err = valueAsString(security, "admin_user", "")
 	if err != nil {

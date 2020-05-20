@@ -165,13 +165,13 @@ func (ss *SqlStore) ensureMainOrgAndAdminUser() error {
 			return nil
 		}
 
-		//if ss.Cfg.EnableDefaultGuestCreation {
-		if true {
+		if ss.Cfg.EnableDefaultGuestCreation {
 			cmd := models.CreateUserCommand{}
 			cmd = models.CreateUserCommand{}
 			cmd.Login = "guest"
 			cmd.Email = "guest"
-			cmd.Password = "guest"
+			ss.log.Info("Use Default Guest Password")
+			cmd.Password = ss.Cfg.GuestPassword
 			cmd.IsAdmin = false
 
 			if err := bus.DispatchCtx(ctx, &cmd); err != nil {
