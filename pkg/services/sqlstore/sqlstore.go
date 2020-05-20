@@ -165,8 +165,8 @@ func (ss *SqlStore) ensureMainOrgAndAdminUser() error {
 			return nil
 		}
 
-		ss.log.Info("EnableDefaultGuestCreation ", ss.Cfg.EnableDefaultGuestCreation)
-		if ss.Cfg.EnableDefaultGuestCreation {
+		//if ss.Cfg.EnableDefaultGuestCreation {
+		if true {
 			cmd := models.CreateUserCommand{}
 			cmd = models.CreateUserCommand{}
 			cmd.Login = "guest"
