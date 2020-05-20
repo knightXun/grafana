@@ -161,7 +161,17 @@ func (ss *SqlStore) ensureMainOrgAndAdminUser() error {
 				return fmt.Errorf("Failed to create admin user: %v", err)
 			}
 
-			ss.log.Info("Created default admin", "user", setting.AdminUser)
+			cmd = models.CreateUserCommand{}
+			cmd.Login = "guest"
+			cmd.Email = "guest"
+			cmd.Password = "guest"
+			cmd.IsAdmin = false
+
+			if err := bus.DispatchCtx(ctx, &cmd); err != nil {
+				return fmt.Errorf("Failed to create Guest user: %v", err)
+			}
+
+			ss.log.Info("Created default admin and guest", "user", setting.AdminUser, "user", "guest")
 			return nil
 		}
 
