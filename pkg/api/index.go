@@ -116,27 +116,6 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 		data.Theme = darkName
 	}
 
-	if hasEditPermissionInFoldersQuery.Result {
-		children := []*dtos.NavLink{
-			{Text: "Dashboard", Icon: "apps", Url: setting.AppSubUrl + "/dashboard/new"},
-		}
-
-		if c.OrgRole == models.ROLE_ADMIN || c.OrgRole == models.ROLE_EDITOR {
-			children = append(children, &dtos.NavLink{Text: "Folder", SubTitle: "Create a new folder to organize your dashboards", Id: "folder", Icon: "folder-plus", Url: setting.AppSubUrl + "/dashboards/folder/new"})
-		}
-
-		children = append(children, &dtos.NavLink{Text: "Import", SubTitle: "Import dashboard from file or Grafana.com", Id: "import", Icon: "import", Url: setting.AppSubUrl + "/dashboard/import"})
-
-		data.NavTree = append(data.NavTree, &dtos.NavLink{
-			Text:       "Create",
-			Id:         "create",
-			Icon:       "plus",
-			Url:        setting.AppSubUrl + "/dashboard/new",
-			Children:   children,
-			SortWeight: dtos.WeightCreate,
-		})
-	}
-
 	dashboardChildNavs := []*dtos.NavLink{
 		{Text: "Home", Id: "home", Url: setting.AppSubUrl + "/", Icon: "home-alt", HideFromTabs: true},
 		{Text: "Divider", Divider: true, Id: "divider", HideFromTabs: true},
@@ -155,17 +134,6 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 		Children:   dashboardChildNavs,
 	})
 
-	if setting.ExploreEnabled && (c.OrgRole == models.ROLE_ADMIN || c.OrgRole == models.ROLE_EDITOR || setting.ViewersCanEdit) {
-		data.NavTree = append(data.NavTree, &dtos.NavLink{
-			Text:       "Explore",
-			Id:         "explore",
-			SubTitle:   "Explore your data",
-			Icon:       "compass",
-			SortWeight: dtos.WeightExplore,
-			Url:        setting.AppSubUrl + "/explore",
-		})
-	}
-
 	if c.IsSignedIn {
 		// Only set login if it's different from the name
 		var login string
@@ -182,40 +150,22 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 			SortWeight:   dtos.WeightProfile,
 			Children: []*dtos.NavLink{
 				{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
-				{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
 			},
 		}
 
-		if !setting.DisableSignoutMenu {
-			// add sign out first
-			profileNode.Children = append(profileNode.Children, &dtos.NavLink{
-				Text:         "Sign out",
-				Id:           "sign-out",
-				Url:          setting.AppSubUrl + "/logout",
-				Icon:         "arrow-from-right",
-				Target:       "_self",
-				HideFromTabs: true,
-			})
-		}
+		//if !setting.DisableSignoutMenu {
+		//	// add sign out first
+		//	profileNode.Children = append(profileNode.Children, &dtos.NavLink{
+		//		Text:         "Sign out",
+		//		Id:           "sign-out",
+		//		Url:          setting.AppSubUrl + "/logout",
+		//		Icon:         "arrow-from-right",
+		//		Target:       "_self",
+		//		HideFromTabs: true,
+		//	})
+		//}
 
 		data.NavTree = append(data.NavTree, profileNode)
-	}
-
-	if setting.AlertingEnabled && (c.OrgRole == models.ROLE_ADMIN || c.OrgRole == models.ROLE_EDITOR) {
-		alertChildNavs := []*dtos.NavLink{
-			{Text: "Alert Rules", Id: "alert-list", Url: setting.AppSubUrl + "/alerting/list", Icon: "list-ul"},
-			{Text: "Notification channels", Id: "channels", Url: setting.AppSubUrl + "/alerting/notifications", Icon: "comment-alt-share"},
-		}
-
-		data.NavTree = append(data.NavTree, &dtos.NavLink{
-			Text:       "Alerting",
-			SubTitle:   "Alert rules & notifications",
-			Id:         "alerting",
-			Icon:       "bell",
-			Url:        setting.AppSubUrl + "/alerting/list",
-			Children:   alertChildNavs,
-			SortWeight: dtos.WeightAlerting,
-		})
 	}
 
 	enabledPlugins, err := plugins.GetEnabledPlugins(c.OrgId)
@@ -266,11 +216,6 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 				}
 			}
 
-			if len(appLink.Children) > 0 && c.OrgRole == models.ROLE_ADMIN {
-				appLink.Children = append(appLink.Children, &dtos.NavLink{Divider: true})
-				appLink.Children = append(appLink.Children, &dtos.NavLink{Text: "Plugin Config", Icon: "cog", Url: setting.AppSubUrl + "/plugins/" + plugin.Id + "/"})
-			}
-
 			if len(appLink.Children) > 0 {
 				data.NavTree = append(data.NavTree, appLink)
 			}
@@ -278,58 +223,6 @@ func (hs *HTTPServer) setIndexTokenViewData(c *models.ReqContext) (*dtos.IndexVi
 	}
 
 	configNodes := []*dtos.NavLink{}
-
-	if c.OrgRole == models.ROLE_ADMIN {
-		configNodes = append(configNodes, &dtos.NavLink{
-			Text:        "Data Sources",
-			Icon:        "database",
-			Description: "Add and configure data sources",
-			Id:          "datasources",
-			Url:         setting.AppSubUrl + "/datasources",
-		})
-		configNodes = append(configNodes, &dtos.NavLink{
-			Text:        "Users",
-			Id:          "users",
-			Description: "Manage org members",
-			Icon:        "user",
-			Url:         setting.AppSubUrl + "/org/users",
-		})
-	}
-
-	if c.OrgRole == models.ROLE_ADMIN || (hs.Cfg.EditorsCanAdmin && c.OrgRole == models.ROLE_EDITOR) {
-		configNodes = append(configNodes, &dtos.NavLink{
-			Text:        "Teams",
-			Id:          "teams",
-			Description: "Manage org groups",
-			Icon:        "users-alt",
-			Url:         setting.AppSubUrl + "/org/teams",
-		})
-	}
-
-	if c.OrgRole == models.ROLE_ADMIN {
-		configNodes = append(configNodes, &dtos.NavLink{
-			Text:        "Plugins",
-			Id:          "plugins",
-			Description: "View and configure plugins",
-			Icon:        "plug",
-			Url:         setting.AppSubUrl + "/plugins",
-		})
-
-		configNodes = append(configNodes, &dtos.NavLink{
-			Text:        "Preferences",
-			Id:          "org-settings",
-			Description: "Organization preferences",
-			Icon:        "sliders-v-alt",
-			Url:         setting.AppSubUrl + "/org",
-		})
-		configNodes = append(configNodes, &dtos.NavLink{
-			Text:        "API Keys",
-			Id:          "apikeys",
-			Description: "Create & manage API keys",
-			Icon:        "key-skeleton-alt",
-			Url:         setting.AppSubUrl + "/org/apikeys",
-		})
-	}
 
 	if len(configNodes) > 0 {
 		data.NavTree = append(data.NavTree, &dtos.NavLink{
@@ -535,6 +428,7 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 		if c.SignedInUser.Login != c.SignedInUser.NameOrFallback() {
 			login = c.SignedInUser.Login
 		}
+
 		profileNode := &dtos.NavLink{
 			Text:         c.SignedInUser.NameOrFallback(),
 			SubTitle:     login,
@@ -545,8 +439,13 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 			SortWeight:   dtos.WeightProfile,
 			Children: []*dtos.NavLink{
 				{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
-				{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
+				//{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
 			},
+		}
+
+		if c.OrgRole != models.ROLE_VIEWER {
+			profileNode.Children = append(profileNode.Children,
+				&dtos.NavLink{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true})
 		}
 
 		if !setting.DisableSignoutMenu {
