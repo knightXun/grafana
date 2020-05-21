@@ -1,10 +1,13 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/grafana/grafana/pkg/api/dtos"
 	"github.com/grafana/grafana/pkg/bus"
@@ -63,6 +66,41 @@ func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
 	userName := c.Params(":userName")
 	token := c.Params(":token")
 
+	auth_url := hs.Cfg.CloudAuthUrl
+
+	httpClient := http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	request, err := http.NewRequest("POST", auth_url, nil)
+	if err != nil {
+		hs.log.Info("Make Cloud Auth Request Failed: %v", err.Error())
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	userAndPasswd := "Nebula " + userName + ":" + token
+	request.Header.Add("Authorization", base64.StdEncoding.EncodeToString([]byte(userAndPasswd)))
+	request.Header.Add("Content-Type", "application/json")
+
+	response, err := httpClient.Do(request)
+
+	if err != nil {
+		hs.log.Info("Do Cloud Auth Request Failed: %v", err.Error())
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	if response.StatusCode < 200 || response.StatusCode > 300 {
+		hs.log.Info("Do Cloud Auth Request Failed: ErrorCode is ", response.StatusCode)
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+	//if userName != "xufei" || token != "2222" {
+	//	c.Handle(404, "Auth Failed", nil)
+	//	return
+	//}
+
 	viewData, err := setIndexTokenViewData(hs, c)
 	if err != nil {
 		c.Handle(500, "Failed to get settings", err)
@@ -81,11 +119,6 @@ func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
 		middleware.DeleteCookie(c.Resp, LoginErrorCookieName, hs.CookieOptionsFromCfg)
 		viewData.Settings["loginError"] = loginError
 		c.HTML(200, getViewIndex(), viewData)
-		return
-	}
-
-	if userName != "xufei" || token != "2222" {
-		c.Handle(404, "Auth Failed", nil)
 		return
 	}
 

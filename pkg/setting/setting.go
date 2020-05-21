@@ -228,6 +228,7 @@ type Cfg struct {
 	AppUrl           string
 	AppSubUrl        string
 	ServeFromSubPath bool
+	CloudAuthUrl     string
 
 	// Paths
 	ProvisioningPath   string
@@ -759,6 +760,10 @@ func (cfg *Cfg) Load(args *CommandLineArgs) error {
 	StrictTransportSecurityMaxAge = security.Key("strict_transport_security_max_age_seconds").MustInt(86400)
 	StrictTransportSecurityPreload = security.Key("strict_transport_security_preload").MustBool(false)
 	StrictTransportSecuritySubDomains = security.Key("strict_transport_security_subdomains").MustBool(false)
+
+	cloud_http_url := os.Getenv("CLOUD_HTTP_URL")
+
+	cfg.CloudAuthUrl = cloud_http_url
 
 	// read snapshots settings
 	snapshots := iniFile.Section("snapshots")

@@ -84,6 +84,11 @@ fi
 
 sed -i 's/NEBULA_NAMESPACE/'"$NEBULA_NAMESPACE"'/g' /etc/grafana/provisioning/nebula.json
 
+if [ -z "${CLOUD_HTTP_URL}" ]; then
+  echo "Empty CLOUD_HTTP_URL!"
+  exit 1
+fi
+
 exec grafana-server                                         \
   --homepath="$GF_PATHS_HOME"                               \
   --config="$GF_PATHS_CONFIG"                               \
