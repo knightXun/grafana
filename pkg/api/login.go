@@ -79,8 +79,8 @@ func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
 		return
 	}
 
-	userAndPasswd := "Nebula " + userName + ":" + token
-	request.Header.Add("Authorization", base64.StdEncoding.EncodeToString([]byte(userAndPasswd)))
+	userAndPasswd := userName + ":" + token
+	request.Header.Add("Authorization", "Nebula "+base64.StdEncoding.EncodeToString([]byte(userAndPasswd)))
 	request.Header.Add("Content-Type", "application/json")
 
 	response, err := httpClient.Do(request)
