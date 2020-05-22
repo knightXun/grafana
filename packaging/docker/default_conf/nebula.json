@@ -15,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
@@ -327,7 +326,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (container_memory_working_set_bytes{name=~\"k8s_POD_nebula-graphd-.*|k8s_POD_nebula-metad-.*|k8s_POD_nebula-storaged-.*\",namespace=\"NEBULA_NAMESPACE\"}) by (name)",
+          "expr": "sum (container_memory_working_set_bytes{namespace=\"NEBULA_NAMESPACE\",pod=~\"storaged-0|metad-0\", name=~\"k8s_metad_metad-0.*|k8s_storaged_storaged.*\"}) by (name)",
           "hide": false,
           "interval": "10s",
           "legendFormat": "{{name}}",
@@ -424,7 +423,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (rate (container_cpu_usage_seconds_total{name=~\"k8s_nebula-graphd.*|k8s_nebula-metad.*|k8s_nebula-storaged.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+          "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"NEBULA_NAMESPACE\",pod=~\"graphd.*|storaged-.*|metad-.*\", name=~\"k8s_metad_metad-0.*|k8s_storaged_storaged.*|k8s_graphd_graphd.*\"}[2m])*1000 ) by (name)",
           "interval": "5s",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -518,7 +517,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (rate (container_network_receive_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+          "expr": "sum (rate (container_network_receive_bytes_total{namespace=\"NEBULA_NAMESPACE\", name=~\"k8s_POD_metad.*|k8s_POD_storaged.*|k8s_POD_graphd.*\"}[2m])) by (name)",
           "instant": false,
           "interval": "10s",
           "legendFormat": "->{{name}}",
@@ -619,7 +618,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(container_network_receive_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])",
+          "expr": "rate(container_network_receive_bytes_total{namespace=\"NEBULA_NAMESPACE\", name=~\"k8s_POD_graphd.*|k8s_POD_storaged.*|k8s_POD_metad.*\"}[2m])",
           "interval": "10s",
           "legendFormat": "Recived",
           "refId": "A"
@@ -1565,7 +1564,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "container_fs_usage_bytes{namespace=\"NEBULA_NAMESPACE\",device=\"/dev/vda1\",name=~\"k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\"}",
+          "expr": "container_fs_usage_bytes{namespace=\"NEBULA_NAMESPACE\",name=~\"k8s_metad.*|k8s_storaged.*\"}",
           "interval": "10s",
           "legendFormat": "",
           "refId": "A"
@@ -1621,7 +1620,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -1630,5 +1629,5 @@
   "timezone": "browser",
   "title": "nebula",
   "uid": "97I8NYLWk",
-  "version": 2
+  "version": 1
 }

@@ -74,7 +74,7 @@ func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
 
 	request, err := http.NewRequest("POST", auth_url, nil)
 	if err != nil {
-		hs.log.Info("Make Cloud Auth Request Failed: %v", err.Error())
+		hs.log.Info("Make Cloud Auth Request Failed: " + err.Error())
 		c.Handle(404, "Auth Failed", nil)
 		return
 	}
@@ -86,7 +86,7 @@ func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
 	response, err := httpClient.Do(request)
 
 	if err != nil {
-		hs.log.Info("Do Cloud Auth Request Failed: %v", err.Error())
+		hs.log.Info("Do Cloud Auth Request Failed: " + err.Error())
 		c.Handle(404, "Auth Failed", nil)
 		return
 	}
