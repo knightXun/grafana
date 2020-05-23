@@ -3,6 +3,7 @@ package plugins
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
 	"regexp"
 
 	"github.com/grafana/grafana/pkg/bus"
@@ -12,6 +13,19 @@ import (
 )
 
 type ImportDashboardCommand struct {
+	Dashboard *simplejson.Json
+	Path      string
+	Inputs    []ImportDashboardInput
+	Overwrite bool
+	FolderId  int64
+
+	OrgId    int64
+	User     *models.SignedInUser
+	PluginId string
+	Result   *PluginDashboardInfoDTO
+}
+
+type ImportInstanceDashboardCommand struct {
 	Dashboard *simplejson.Json
 	Path      string
 	Inputs    []ImportDashboardInput
@@ -41,6 +55,7 @@ func (e DashboardInputMissingError) Error() string {
 
 func init() {
 	bus.AddHandler("plugins", ImportDashboard)
+	bus.AddHandler("plugins", ImportInstanceDashboard)
 }
 
 func ImportDashboard(cmd *ImportDashboardCommand) error {
@@ -84,6 +99,69 @@ func ImportDashboard(cmd *ImportDashboardCommand) error {
 	savedDash, err := dashboards.NewService().ImportDashboard(dto)
 
 	if err != nil {
+		logger.Infof("Dashboards Service ImportDashboard Failed: %v", err)
+		return err
+	}
+
+	cmd.Result = &PluginDashboardInfoDTO{
+		PluginId:         cmd.PluginId,
+		Title:            savedDash.Title,
+		Path:             cmd.Path,
+		Revision:         savedDash.Data.Get("revision").MustInt64(1),
+		FolderId:         savedDash.FolderId,
+		ImportedUri:      "db/" + savedDash.Slug,
+		ImportedUrl:      savedDash.GetUrl(),
+		ImportedRevision: dashboard.Data.Get("revision").MustInt64(1),
+		Imported:         true,
+		DashboardId:      savedDash.Id,
+		Slug:             savedDash.Slug,
+	}
+
+	return nil
+}
+
+func ImportInstanceDashboard(cmd *ImportInstanceDashboardCommand) error {
+	var dashboard *models.Dashboard
+	var err error
+
+	if cmd.PluginId != "" {
+		if dashboard, err = loadPluginDashboard(cmd.PluginId, cmd.Path); err != nil {
+			return err
+		}
+	} else {
+		dashboard = models.NewDashboardFromJson(cmd.Dashboard)
+	}
+
+	evaluator := &DashTemplateEvaluator{
+		template: dashboard.Data,
+		inputs:   cmd.Inputs,
+	}
+
+	generatedDash, err := evaluator.Eval()
+	if err != nil {
+		return err
+	}
+
+	saveCmd := models.SaveDashboardCommand{
+		Dashboard: generatedDash,
+		OrgId:     cmd.OrgId,
+		UserId:    cmd.User.UserId,
+		Overwrite: cmd.Overwrite,
+		PluginId:  cmd.PluginId,
+		FolderId:  cmd.FolderId,
+	}
+
+	dto := &dashboards.SaveDashboardDTO{
+		OrgId:     cmd.OrgId,
+		Dashboard: saveCmd.GetDashboardModel(),
+		Overwrite: saveCmd.Overwrite,
+		User:      cmd.User,
+	}
+
+	savedDash, err := dashboards.NewService().ImportInstanceDashboard(dto)
+
+	if err != nil {
+		logger.Infof("Dashboards Service ImportDashboard Failed: %v", err)
 		return err
 	}
 

@@ -19,6 +19,7 @@ import (
 type DashboardService interface {
 	SaveDashboard(dto *SaveDashboardDTO, allowUiUpdate bool) (*models.Dashboard, error)
 	ImportDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error)
+	ImportInstanceDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error)
 	DeleteDashboard(dashboardId int64, orgId int64) error
 }
 
@@ -82,6 +83,8 @@ func (dr *dashboardServiceImpl) GetProvisionedDashboardDataByDashboardID(dashboa
 }
 
 func (dr *dashboardServiceImpl) buildSaveDashboardCommand(dto *SaveDashboardDTO, validateAlerts bool, validateProvisionedDashboard bool) (*models.SaveDashboardCommand, error) {
+	dr.log.Info("buildSaveDashboardCommand Step 1")
+
 	dash := dto.Dashboard
 
 	dash.Title = strings.TrimSpace(dash.Title)
@@ -128,6 +131,8 @@ func (dr *dashboardServiceImpl) buildSaveDashboardCommand(dto *SaveDashboardDTO,
 		Overwrite: dto.Overwrite,
 	}
 
+	dr.log.Info("buildSaveDashboardCommand Step 2")
+
 	if err := bus.Dispatch(&validateBeforeSaveCmd); err != nil {
 		return nil, err
 	}
@@ -141,6 +146,8 @@ func (dr *dashboardServiceImpl) buildSaveDashboardCommand(dto *SaveDashboardDTO,
 			return nil, models.ErrDashboardUpdateAccessDenied
 		}
 	}
+
+	dr.log.Info("buildSaveDashboardCommand Step 3")
 
 	if validateProvisionedDashboard {
 		provisionedData, err := dr.GetProvisionedDashboardDataByDashboardID(dash.Id)
@@ -159,6 +166,101 @@ func (dr *dashboardServiceImpl) buildSaveDashboardCommand(dto *SaveDashboardDTO,
 			return nil, err
 		}
 		return nil, models.ErrDashboardUpdateAccessDenied
+	}
+
+	cmd := &models.SaveDashboardCommand{
+		Dashboard: dash.Data,
+		Message:   dto.Message,
+		OrgId:     dto.OrgId,
+		Overwrite: dto.Overwrite,
+		UserId:    dto.User.UserId,
+		FolderId:  dash.FolderId,
+		IsFolder:  dash.IsFolder,
+		PluginId:  dash.PluginId,
+	}
+
+	if !dto.UpdatedAt.IsZero() {
+		cmd.UpdatedAt = dto.UpdatedAt
+	}
+
+	return cmd, nil
+}
+
+func (dr *dashboardServiceImpl) buildSaveDashboardCommandWithoutPermissionCheck(dto *SaveDashboardDTO, validateAlerts bool, validateProvisionedDashboard bool) (*models.SaveDashboardCommand, error) {
+
+	dash := dto.Dashboard
+
+	dash.Title = strings.TrimSpace(dash.Title)
+	dash.Data.Set("title", dash.Title)
+	dash.SetUid(strings.TrimSpace(dash.Uid))
+
+	if dash.Title == "" {
+		return nil, models.ErrDashboardTitleEmpty
+	}
+
+	if dash.IsFolder && dash.FolderId > 0 {
+		return nil, models.ErrDashboardFolderCannotHaveParent
+	}
+
+	if dash.IsFolder && strings.EqualFold(dash.Title, models.RootFolderName) {
+		return nil, models.ErrDashboardFolderNameExists
+	}
+
+	if !util.IsValidShortUID(dash.Uid) {
+		return nil, models.ErrDashboardInvalidUid
+	} else if len(dash.Uid) > 40 {
+		return nil, models.ErrDashboardUidToLong
+	}
+
+	if err := validateDashboardRefreshInterval(dash); err != nil {
+		return nil, err
+	}
+
+	if validateAlerts {
+		validateAlertsCmd := models.ValidateDashboardAlertsCommand{
+			OrgId:     dto.OrgId,
+			Dashboard: dash,
+			User:      dto.User,
+		}
+
+		if err := bus.Dispatch(&validateAlertsCmd); err != nil {
+			return nil, err
+		}
+	}
+
+	validateBeforeSaveCmd := models.ValidateDashboardBeforeSaveCommand{
+		OrgId:     dto.OrgId,
+		Dashboard: dash,
+		Overwrite: dto.Overwrite,
+	}
+
+	dr.log.Info("buildSaveDashboardCommand Step 2")
+
+	if err := bus.Dispatch(&validateBeforeSaveCmd); err != nil {
+		return nil, err
+	}
+
+	if validateBeforeSaveCmd.Result.IsParentFolderChanged {
+		folderGuardian := guardian.New(dash.FolderId, dto.OrgId, dto.User)
+		if canSave, err := folderGuardian.CanSave(); err != nil || !canSave {
+			if err != nil {
+				return nil, err
+			}
+			return nil, models.ErrDashboardUpdateAccessDenied
+		}
+	}
+
+	dr.log.Info("buildSaveDashboardCommand Step 3")
+
+	if validateProvisionedDashboard {
+		provisionedData, err := dr.GetProvisionedDashboardDataByDashboardID(dash.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		if provisionedData != nil {
+			return nil, models.ErrDashboardCannotSaveProvisionedDashboard
+		}
 	}
 
 	cmd := &models.SaveDashboardCommand{
@@ -216,7 +318,46 @@ func (dr *dashboardServiceImpl) updateAlerting(cmd *models.SaveDashboardCommand,
 	return bus.Dispatch(&alertCmd)
 }
 
+func (dr *dashboardServiceImpl) SaveInstanceProvisionedDashboard(dto *SaveDashboardDTO, provisioning *models.DashboardProvisioning) (*models.Dashboard, error) {
+	dr.log.Info("SaveProvisionedDashboard step 1")
+	if err := validateDashboardRefreshInterval(dto.Dashboard); err != nil {
+		dr.log.Warn("Changing refresh interval for provisioned dashboard to minimum refresh interval", "dashboardUid", dto.Dashboard.Uid, "dashboardTitle", dto.Dashboard.Title, "minRefreshInterval", setting.MinRefreshInterval)
+		dto.Dashboard.Data.Set("refresh", setting.MinRefreshInterval)
+	}
+
+	dto.User = &models.SignedInUser{
+		UserId:  0,
+		OrgRole: models.ROLE_ADMIN,
+		OrgId:   dto.OrgId,
+	}
+
+	cmd, err := dr.buildSaveDashboardCommandWithoutPermissionCheck(dto, true, false)
+	if err != nil {
+		return nil, err
+	}
+
+	saveCmd := &models.SaveProvisionedDashboardCommand{
+		DashboardCmd:          cmd,
+		DashboardProvisioning: provisioning,
+	}
+
+	// dashboard
+	err = bus.Dispatch(saveCmd)
+	if err != nil {
+		return nil, err
+	}
+
+	//alerts
+	err = dr.updateAlerting(cmd, dto)
+	if err != nil {
+		return nil, err
+	}
+
+	return cmd.Result, nil
+}
+
 func (dr *dashboardServiceImpl) SaveProvisionedDashboard(dto *SaveDashboardDTO, provisioning *models.DashboardProvisioning) (*models.Dashboard, error) {
+	dr.log.Info("SaveProvisionedDashboard step 1")
 	if err := validateDashboardRefreshInterval(dto.Dashboard); err != nil {
 		dr.log.Warn("Changing refresh interval for provisioned dashboard to minimum refresh interval", "dashboardUid", dto.Dashboard.Uid, "dashboardTitle", dto.Dashboard.Title, "minRefreshInterval", setting.MinRefreshInterval)
 		dto.Dashboard.Data.Set("refresh", setting.MinRefreshInterval)
@@ -323,15 +464,42 @@ func (dr *dashboardServiceImpl) deleteDashboard(dashboardId int64, orgId int64, 
 }
 
 func (dr *dashboardServiceImpl) ImportDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error) {
+	dr.log.Info("ImportDashboard Step 1")
 	if err := validateDashboardRefreshInterval(dto.Dashboard); err != nil {
 		dr.log.Warn("Changing refresh interval for imported dashboard to minimum refresh interval", "dashboardUid", dto.Dashboard.Uid, "dashboardTitle", dto.Dashboard.Title, "minRefreshInterval", setting.MinRefreshInterval)
 		dto.Dashboard.Data.Set("refresh", setting.MinRefreshInterval)
 	}
 
+	dr.log.Info("ImportDashboard Step 2")
 	cmd, err := dr.buildSaveDashboardCommand(dto, false, true)
+	if err != nil {
+		dr.log.Info("ImportDashboard error: ", err.Error())
+		return nil, err
+	}
+	dr.log.Info("ImportDashboard Step 3")
+
+	err = bus.Dispatch(cmd)
 	if err != nil {
 		return nil, err
 	}
+
+	return cmd.Result, nil
+}
+
+func (dr *dashboardServiceImpl) ImportInstanceDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error) {
+	dr.log.Info("ImportInstanceDashboard Step 1")
+	if err := validateDashboardRefreshInterval(dto.Dashboard); err != nil {
+		dr.log.Warn("Changing refresh interval for imported dashboard to minimum refresh interval", "dashboardUid", dto.Dashboard.Uid, "dashboardTitle", dto.Dashboard.Title, "minRefreshInterval", setting.MinRefreshInterval)
+		dto.Dashboard.Data.Set("refresh", setting.MinRefreshInterval)
+	}
+
+	dr.log.Info("ImportInstanceDashboard Step 2")
+	cmd, err := dr.buildSaveDashboardCommand(dto, false, true)
+	if err != nil {
+		dr.log.Info("ImportInstanceDashboard error: ", err.Error())
+		return nil, err
+	}
+	dr.log.Info("ImportInstanceDashboard Step 3")
 
 	err = bus.Dispatch(cmd)
 	if err != nil {
@@ -365,6 +533,10 @@ func (s *FakeDashboardService) SaveDashboard(dto *SaveDashboardDTO, allowUiUpdat
 }
 
 func (s *FakeDashboardService) ImportDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error) {
+	return s.SaveDashboard(dto, true)
+}
+
+func (s *FakeDashboardService) ImportInstanceDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error) {
 	return s.SaveDashboard(dto, true)
 }
 

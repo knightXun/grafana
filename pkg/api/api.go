@@ -109,6 +109,11 @@ func (hs *HTTPServer) registerRoutes() {
 	// api renew session based on cookie
 	r.Get("/api/login/ping", quota("session"), Wrap(hs.LoginAPIPing))
 
+	r.Group("/instances", func(apiRoute routing.RouteRegister) {
+		apiRoute.Post("/create/:instanceID", Wrap(CreateInstances))
+		apiRoute.Delete("/delete/:instanceID", Wrap(DeleteInstances))
+	})
+
 	// authed api
 	r.Group("/api", func(apiRoute routing.RouteRegister) {
 

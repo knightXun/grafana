@@ -59,6 +59,7 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
 
 EXPOSE 3000
 
+COPY nebula.json /
 COPY ./run.sh /run.sh
 
 USER grafana

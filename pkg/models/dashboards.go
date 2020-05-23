@@ -262,6 +262,22 @@ type SaveDashboardCommand struct {
 	Result *Dashboard
 }
 
+type SaveInstanceDashboardCommand struct {
+	Dashboard    *simplejson.Json `json:"dashboard" binding:"Required"`
+	UserId       int64            `json:"userId"`
+	Overwrite    bool             `json:"overwrite"`
+	Message      string           `json:"message"`
+	OrgId        int64            `json:"-"`
+	RestoredFrom int              `json:"-"`
+	PluginId     string           `json:"-"`
+	FolderId     int64            `json:"folderId"`
+	IsFolder     bool             `json:"isFolder"`
+
+	UpdatedAt time.Time
+
+	Result *Dashboard
+}
+
 type DashboardProvisioning struct {
 	Id          int64
 	DashboardId int64

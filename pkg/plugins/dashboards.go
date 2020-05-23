@@ -1,12 +1,14 @@
 package plugins
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/models"
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 type PluginDashboardInfoDTO struct {
@@ -110,4 +112,30 @@ func loadPluginDashboard(pluginId, path string) (*models.Dashboard, error) {
 	}
 
 	return models.NewDashboardFromJson(data), nil
+}
+
+func CreateDashboardFromFile(pluginDir, path, uid string) (*models.Dashboard, error) {
+
+	dashboardFilePath := filepath.Join(pluginDir, path)
+	content, err := ioutil.ReadFile(dashboardFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := simplejson.NewJson(content)
+	if err != nil {
+		return nil, err
+	}
+
+	dashboard := models.NewDashboardFromJson(data)
+
+	dashboard.Id = rand.Int63()
+	dashboard.Uid = uid
+	dashboard.Data.Set("version", 0)
+	dashboard.Created = time.Now()
+	dashboard.Updated = time.Now()
+	dashboard.Title = uid
+
+	dashboard.GnetId = dashboard.Id
+	return dashboard, nil
 }

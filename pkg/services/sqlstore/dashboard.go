@@ -1,6 +1,7 @@
 package sqlstore
 
 import (
+	"github.com/grafana/grafana/pkg/cmd/grafana-cli/logger"
 	"strings"
 	"time"
 
@@ -51,6 +52,7 @@ func SaveDashboard(cmd *models.SaveDashboardCommand) error {
 }
 
 func saveDashboard(sess *DBSession, cmd *models.SaveDashboardCommand) error {
+	logger.Info("saveDashboard step 1")
 	dash := cmd.GetDashboardModel()
 
 	userId := cmd.UserId
@@ -91,6 +93,8 @@ func saveDashboard(sess *DBSession, cmd *models.SaveDashboardCommand) error {
 		}
 		dash.SetUid(uid)
 	}
+
+	logger.Info("saveDashboard step 2")
 
 	parentVersion := dash.Version
 	var affectedRows int64
@@ -137,6 +141,7 @@ func saveDashboard(sess *DBSession, cmd *models.SaveDashboardCommand) error {
 		Data:          dash.Data,
 	}
 
+	logger.Info("saveDashboard step 3")
 	// insert version entry
 	if affectedRows, err = sess.Insert(dashVersion); err != nil {
 		return err
@@ -159,6 +164,8 @@ func saveDashboard(sess *DBSession, cmd *models.SaveDashboardCommand) error {
 			}
 		}
 	}
+
+	logger.Info("saveDashboard step 4")
 
 	cmd.Result = dash
 
@@ -672,10 +679,11 @@ func ValidateDashboardBeforeSave(cmd *models.ValidateDashboardBeforeSaveCommand)
 	cmd.Result = &models.ValidateDashboardBeforeSaveResult{}
 
 	return inTransaction(func(sess *DBSession) error {
+		logger.Info("ValidateDashboardBeforeSave 1")
 		if err = getExistingDashboardByIdOrUidForUpdate(sess, cmd); err != nil {
 			return err
 		}
-
+		logger.Info("ValidateDashboardBeforeSave 2")
 		if err = getExistingDashboardByTitleAndFolder(sess, cmd); err != nil {
 			return err
 		}

@@ -29,15 +29,15 @@ node_modules: package.json yarn.lock ## Install node modules.
 
 build-go: ## Build all Go binaries.
 	@echo "build go files"
-	$(GO) run build.go build
+	CC=x86_64-linux-musl-gcc CGO_ENABLED=1 $(GO) run build.go -goos linux -pkg-arch amd64 build
 
 build-server: ## Build Grafana server.
 	@echo "build server"
-	$(GO) run build.go build-server
+	CC=x86_64-linux-musl-gcc CGO_ENABLED=1 $(GO) run build.go -goos linux -pkg-arch amd64 build-server
 
 build-cli: ## Build Grafana CLI application.
 	@echo "build in CI environment"
-	$(GO) run build.go build-cli
+	CC=x86_64-linux-musl-gcc CGO_ENABLED=1 $(GO) run build.go -goos linux -pkg-arch amd64 build-cli
 
 build-js: ## Build frontend assets.
 	@echo "build frontend"
@@ -127,13 +127,14 @@ shellcheck: $(SH_FILES) ## Run checks for shell scripts.
 build-docker-dev: ## Build Docker image for development (fast).
 	@echo "build development container"
 	@echo "\033[92mInfo:\033[0m the frontend code is expected to be built already."
-	$(GO) run build.go -goos linux -pkg-arch amd64 ${OPT} build pkg-archive latest
-	cp dist/grafana-latest.linux-x64.tar.gz packaging/docker
-	cd packaging/docker && docker build --tag grafana/grafana:dev .
+	CC=x86_64-linux-musl-gcc CGO_ENABLED=1  $(GO) run build.go -goos linux -pkg-arch amd64 ${OPT} build build-srv build-server build-cli pkg-archive latest
+	mv dist/grafana-latest.linux-x64.tar.gz dist/grafana-latest.linux-x64-musl.tar.gz
+	cp dist/grafana-latest.linux-x64-musl.tar.gz packaging/docker/
+	cd packaging/docker && docker build --tag knightxun/grafana:dev .
 
 build-docker-full: ## Build Docker image for development.
 	@echo "build docker container"
-	docker build --tag grafana/grafana:dev .
+	docker build --tag knightxun/grafana:dev .
 
 ##@ Services
 
