@@ -464,19 +464,16 @@ func (dr *dashboardServiceImpl) deleteDashboard(dashboardId int64, orgId int64, 
 }
 
 func (dr *dashboardServiceImpl) ImportDashboard(dto *SaveDashboardDTO) (*models.Dashboard, error) {
-	dr.log.Info("ImportDashboard Step 1")
 	if err := validateDashboardRefreshInterval(dto.Dashboard); err != nil {
 		dr.log.Warn("Changing refresh interval for imported dashboard to minimum refresh interval", "dashboardUid", dto.Dashboard.Uid, "dashboardTitle", dto.Dashboard.Title, "minRefreshInterval", setting.MinRefreshInterval)
 		dto.Dashboard.Data.Set("refresh", setting.MinRefreshInterval)
 	}
 
-	dr.log.Info("ImportDashboard Step 2")
 	cmd, err := dr.buildSaveDashboardCommand(dto, false, true)
 	if err != nil {
 		dr.log.Info("ImportDashboard error: ", err.Error())
 		return nil, err
 	}
-	dr.log.Info("ImportDashboard Step 3")
 
 	err = bus.Dispatch(cmd)
 	if err != nil {
@@ -494,7 +491,7 @@ func (dr *dashboardServiceImpl) ImportInstanceDashboard(dto *SaveDashboardDTO) (
 	}
 
 	dr.log.Info("ImportInstanceDashboard Step 2")
-	cmd, err := dr.buildSaveDashboardCommand(dto, false, true)
+	cmd, err := dr.buildSaveDashboardCommandWithoutPermissionCheck(dto, false, true)
 	if err != nil {
 		dr.log.Info("ImportInstanceDashboard error: ", err.Error())
 		return nil, err

@@ -29,11 +29,6 @@ func CreateInstances(c *models.ReqContext) Response {
 	}
 	logger.Info("Create User Success")
 
-	//id, err := createFolder(instance)
-	//if err != nil {
-	//	return Error(500, "Failed to Create Folder", err)
-	//}
-
 	err = createDashboard(instance, instance)
 	if err != nil {
 		return Error(500, "Failed to Create Dashboard", err)
@@ -146,19 +141,15 @@ func createDashboard(orgname, username string) error {
 	user := userQuery.Result
 
 	dashboard, err := plugins.CreateDashboardFromFile("/", "nebula.json", username)
-
+	dashboard.Data.Set("title", username)
+	dashboard.Data.Set("uid", username)
 	dashboard.Title = username
 	dashboard.Uid = username
-
-	str, _ := dashboard.Data.String()
-	logger.Info("Generate Dashboard ", str)
 
 	if err != nil {
 		logger.Info("Generate Dashboard from json file Failed: ", err.Error())
 		return err
 	}
-
-	//SaveDashboard()
 
 	saveCmd := models.SaveInstanceDashboardCommand{
 		OrgId:        orgQuery.Result.Id,
@@ -170,7 +161,7 @@ func createDashboard(orgname, username string) error {
 	saveCmd.Message = fmt.Sprintf("Restored from version %d", 0)
 	saveCmd.FolderId = 0
 
-	cmd := plugins.ImportDashboardCommand{
+	cmd := plugins.ImportInstanceDashboardCommand{
 		OrgId: orgQuery.Result.Id,
 		User: &models.SignedInUser{
 			UserId:         1,
@@ -190,53 +181,6 @@ func createDashboard(orgname, username string) error {
 	if err := bus.Dispatch(&cmd); err != nil {
 		return err
 	}
-
-	//dashItem := &dashboards.SaveDashboardDTO{
-	//	Dashboard: dashboard,
-	//	Message:   saveCmd.Message,
-	//	OrgId:     orgQuery.Result.Id,
-	//	User:      &models.SignedInUser{
-	//		UserId: user.Id,
-	//	},
-	//	Overwrite: false,
-	//}
-	//
-	////_, err = dashboards.NewService().ImportDashboard(dashItem)
-	//_, err = dashboards.NewService().SaveDashboard(dashItem, true)
-	//if err != nil {
-	//	logger.Info("SaveDashboard Dashboard Failed: ", err.Error())
-	//	return err
-	//}
-
-	//dashItem := &dashboards.SaveDashboardDTO{
-	//	Dashboard: dashboard,
-	//	Message:   username,
-	//	OrgId:     orgQuery.Result.Id,
-	//	User:      &models.SignedInUser{
-	//		UserId: user.Id,
-	//		Name: username,
-	//		Login: username,
-	//	},
-	//	Overwrite: true,
-	//}
-	//
-	//SaveProvisionedDashboard
-	//SaveDashboardCommand
-	//_, err = dashboards.NewService().SaveDashboard(dashItem, true)
-
-	//cmd := &plugins.ImportDashboardCommand{
-	//	Dashboard: dashboard.Data,
-	//	FolderId: 0,
-	//	OrgId:     orgQuery.Result.Id,
-	//	User:      &models.SignedInUser{
-	//		UserId: user.Id,
-	//		Name: username,
-	//		Login: username,
-	//	},
-	//	Overwrite: true,
-	//	Path: "/",
-	//}
-	//err = bus.Dispatch(cmd)
 
 	if err != nil {
 		logger.Info("Importer Dashboard from json file Failed: ", err.Error())
@@ -316,6 +260,13 @@ func deleteOrg(instance string) error {
 
 func deleteInstanceDashboard(instance string) error {
 
+	userQuery := models.GetUserByLoginQuery{LoginOrEmail: instance}
+
+	if err := bus.Dispatch(&userQuery); err != nil {
+		logger.Info("Query User "+instance+" Failed ", err.Error())
+		return err
+	}
+
 	orgQuery := models.GetOrgByNameQuery{
 		Name: instance,
 	}
@@ -335,6 +286,10 @@ func deleteInstanceDashboard(instance string) error {
 	query := &search.FindPersistedDashboardsQuery{
 		OrgId: id,
 		Title: instance,
+		SignedInUser: &models.SignedInUser{
+			UserId: userQuery.Result.Id,
+			OrgId:  userQuery.Result.OrgId,
+		},
 	}
 
 	err := sqlstore.SearchDashboards(query)
@@ -345,7 +300,7 @@ func deleteInstanceDashboard(instance string) error {
 
 	for _, id := range query.DashboardIds {
 		err := sqlstore.DeleteDashboard(&models.DeleteDashboardCommand{
-			OrgId: 1,
+			OrgId: orgQuery.Result.Id,
 			Id:    id,
 		})
 

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -122,7 +123,10 @@ func CreateDashboardFromFile(pluginDir, path, uid string) (*models.Dashboard, er
 		return nil, err
 	}
 
-	data, err := simplejson.NewJson(content)
+	contentStr := string(content)
+
+	contentStr = strings.ReplaceAll(contentStr, "NEBULA_NAMESPACE", uid)
+	data, err := simplejson.NewJson([]byte(contentStr))
 	if err != nil {
 		return nil, err
 	}

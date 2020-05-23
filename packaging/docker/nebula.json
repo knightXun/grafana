@@ -15,15 +15,20 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "panels": [
     {
       "cacheTimeout": null,
       "colorBackground": false,
-      "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "colorValue": true,
+      "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -38,7 +43,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 6,
+      "id": null,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -55,7 +60,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -78,9 +82,9 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(nebula_storage_add_edge_error_qps_avg_3600)",
-          "hide": false,
-          "interval": "60s",
+          "expr": "count(nebula_graphd_storageClient_error_qps_avg_3600{kubernetes_namespace=\"NEBULA_NAMESPACE\"})",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -97,14 +101,20 @@
           "value": "null"
         }
       ],
-      "valueName": "current"
+      "valueName": "avg"
     },
     {
       "cacheTimeout": null,
       "colorBackground": false,
-      "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "colorValue": true,
+      "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -136,7 +146,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -159,8 +168,9 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(nebula_graphd_all_error_qps_avg_3600)",
-          "interval": "60s",
+          "expr": "count(nebula_graphd_storageClient_error_qps_avg_3600{kubernetes_namespace=\"NEBULA_NAMESPACE\"})",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -177,14 +187,20 @@
           "value": "null"
         }
       ],
-      "valueName": "current"
+      "valueName": "avg"
     },
     {
       "cacheTimeout": null,
       "colorBackground": false,
-      "colors": ["#F2495C", "rgba(237, 129, 40, 0.89)", "#FFA6B0"],
       "colorValue": true,
+      "colors": ["#F2495C", "rgba(237, 129, 40, 0.89)", "#FFA6B0"],
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -216,7 +232,6 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
-      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -239,8 +254,9 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(nebula_metad_heartbeat_latency_count_3600)",
-          "interval": "60s",
+          "expr": "count(nebula_metad_heartbeat_latency_count_3600{kubernetes_namespace=\"NEBULA_NAMESPACE\"})",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -262,16 +278,418 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": "Prometheus",
+      "decimals": 2,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 2,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 3
+      },
+      "hiddenSeries": false,
+      "id": 20,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "sideWidth": 200,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum (container_memory_working_set_bytes{namespace=\"NEBULA_NAMESPACE\",pod=~\"storaged-0|metad-0\", name=~\"k8s_metad_metad-0.*|k8s_storaged_storaged.*\"}) by (name)",
+          "hide": false,
+          "interval": "10s",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "memory利用率",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "bytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "decimals": 3,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 3
+      },
+      "hiddenSeries": false,
+      "id": 18,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "connected",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum (rate (container_cpu_usage_seconds_total{namespace=\"NEBULA_NAMESPACE\",pod=~\"graphd.*|storaged-.*|metad-.*\", name=~\"k8s_metad_metad-0.*|k8s_storaged_storaged.*|k8s_graphd_graphd.*\"}[2m])*1000 ) by (name)",
+          "interval": "5s",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "cpu利用率",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 3
+        "y": 11
+      },
+      "hiddenSeries": false,
+      "id": 22,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum (rate (container_network_receive_bytes_total{namespace=\"NEBULA_NAMESPACE\", name=~\"k8s_POD_metad.*|k8s_POD_storaged.*|k8s_POD_graphd.*\"}[2m])) by (name)",
+          "instant": false,
+          "interval": "10s",
+          "legendFormat": "->{{name}}",
+          "refId": "A"
+        },
+        {
+          "expr": "- sum (rate (container_network_transmit_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+          "interval": "10s",
+          "legendFormat": "<-{{name}}",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "网络吞吐",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 11
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "rate(container_network_receive_bytes_total{namespace=\"NEBULA_NAMESPACE\", name=~\"k8s_POD_graphd.*|k8s_POD_storaged.*|k8s_POD_metad.*\"}[2m])",
+          "interval": "10s",
+          "legendFormat": "Recived",
+          "refId": "A"
+        },
+        {
+          "expr": "- rate (container_network_transmit_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])",
+          "interval": "10s",
+          "legendFormat": "Sent",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Network I/O pressure",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 19
       },
       "hiddenSeries": false,
       "id": 40,
@@ -300,8 +718,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_go_latency_count_60",
-          "interval": "60s",
+          "expr": "nebula_graphd_go_latency_count_60{namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "10s",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -349,19 +768,25 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
-      "datasource": "Prometheus",
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 3
+        "y": 19
       },
       "hiddenSeries": false,
-      "id": 29,
+      "id": 41,
       "legend": {
         "avg": false,
         "current": false,
@@ -387,8 +812,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_edge_latency_avg_60/1000",
-          "interval": "60s",
+          "expr": "nebula_graphd_insert_edge_latency_count_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "10s",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -396,7 +822,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Insert Edges Latency",
+      "title": "Insert Edge个数",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -412,7 +838,7 @@
       },
       "yaxes": [
         {
-          "format": "ms",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -436,16 +862,22 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 42,
@@ -474,8 +906,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_vertex_latency_avg_60/1000",
-          "interval": "60s",
+          "expr": "nebula_graphd_insert_vertex_latency_count_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -483,7 +916,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Insert Vertex Latency",
+      "title": "Insert Vertex个数",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -499,7 +932,7 @@
       },
       "yaxes": [
         {
-          "format": "ms",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -523,19 +956,25 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 27
       },
       "hiddenSeries": false,
-      "id": 34,
+      "id": 29,
       "legend": {
         "avg": false,
         "current": false,
@@ -561,8 +1000,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_go_error_qps_avg_60",
+          "expr": "nebula_graphd_insert_edge_latency_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
           "interval": "60s",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -570,7 +1010,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Go Error QPS",
+      "title": "Insert Edges Latency",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -610,16 +1050,22 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 35
       },
       "hiddenSeries": false,
       "id": 28,
@@ -648,8 +1094,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_go_latency_avg_60/1000",
+          "expr": "nebula_graphd_go_latency_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
           "interval": "60s",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -673,7 +1120,7 @@
       },
       "yaxes": [
         {
-          "format": "ms",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -697,19 +1144,25 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 35
       },
       "hiddenSeries": false,
-      "id": 35,
+      "id": 34,
       "legend": {
         "avg": false,
         "current": false,
@@ -735,8 +1188,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_edge_error_qps_avg_5",
-          "interval": "5s",
+          "expr": "nebula_graphd_go_qps_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -744,7 +1198,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "insert edge error qps",
+      "title": "Go QPS",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -784,16 +1238,22 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 30,
@@ -822,8 +1282,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_vertex_latency_avg_60/1000",
-          "interval": "60s",
+          "expr": "nebula_graphd_insert_vertex_latency_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -847,7 +1308,7 @@
       },
       "yaxes": [
         {
-          "format": "ms",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -871,16 +1332,22 @@
     {
       "aliasColors": {},
       "bars": false,
-      "dashes": false,
       "dashLength": 10,
+      "dashes": false,
       "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 43
       },
       "hiddenSeries": false,
       "id": 36,
@@ -909,8 +1376,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_vertex_error_qps_avg_60",
-          "interval": "60s",
+          "expr": "nebula_graphd_insert_vertex_qps_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -918,7 +1386,195 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Insert Vertex Error QPS",
+      "title": "Insert Vertex QPS",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 51
+      },
+      "hiddenSeries": false,
+      "id": 35,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "nebula_graphd_insert_edge_qps_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Insert Edge QPS",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 51
+      },
+      "hiddenSeries": false,
+      "id": 44,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "container_fs_usage_bytes{namespace=\"NEBULA_NAMESPACE\",name=~\"k8s_metad.*|k8s_storaged.*\"}",
+          "interval": "10s",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "磁盘使用情况",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -956,15 +1612,15 @@
       }
     }
   ],
-  "refresh": "5s",
-  "schemaVersion": 22,
+  "refresh": false,
+  "schemaVersion": 25,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -973,5 +1629,5 @@
   "timezone": "browser",
   "title": "nebula",
   "uid": "97I8NYLWk",
-  "version": 26
+  "version": 1
 }
