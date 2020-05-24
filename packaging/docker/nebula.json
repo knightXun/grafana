@@ -102,7 +102,7 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -188,7 +188,7 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -282,15 +282,14 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "decimals": 2,
       "fieldConfig": {
         "defaults": {
           "custom": {}
         },
         "overrides": []
       },
-      "fill": 0,
-      "fillGradient": 2,
+      "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -298,22 +297,19 @@
         "y": 3
       },
       "hiddenSeries": false,
-      "id": 20,
+      "id": 46,
       "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
+        "avg": false,
+        "current": false,
         "max": false,
         "min": false,
-        "rightSide": true,
         "show": true,
-        "sideWidth": 200,
         "total": false,
-        "values": true
+        "values": false
       },
       "lines": true,
-      "linewidth": 2,
-      "nullPointMode": "connected",
+      "linewidth": 1,
+      "nullPointMode": "null",
       "options": {
         "dataLinks": []
       },
@@ -327,10 +323,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (container_memory_working_set_bytes{name=~\"k8s_POD_nebula-graphd-.*|k8s_POD_nebula-metad-.*|k8s_POD_nebula-storaged-.*\",namespace=\"NEBULA_NAMESPACE\"}) by (name)",
-          "hide": false,
+          "expr": "sum (container_memory_working_set_bytes{name=~\"k8s_graphd_graphd-.*|k8s_metad_metad-.*|k8s_storaged_storaged-.*\",namespace=\"NEBULA_NAMESPACE\"}) by (name)",
           "interval": "10s",
-          "legendFormat": "{{name}}",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -338,10 +333,10 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "memory利用率",
+      "title": "内存利用率",
       "tooltip": {
         "shared": true,
-        "sort": 2,
+        "sort": 0,
         "value_type": "individual"
       },
       "type": "graph",
@@ -354,7 +349,7 @@
       },
       "yaxes": [
         {
-          "format": "bytes",
+          "format": "short",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -367,7 +362,7 @@
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": false
+          "show": true
         }
       ],
       "yaxis": {
@@ -405,6 +400,8 @@
         "max": false,
         "min": false,
         "show": true,
+        "sort": null,
+        "sortDesc": null,
         "total": false,
         "values": true
       },
@@ -424,7 +421,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (rate (container_cpu_usage_seconds_total{name=~\"k8s_nebula-graphd.*|k8s_nebula-metad.*|k8s_nebula-storaged.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+          "expr": "sum (rate (container_cpu_usage_seconds_total{name=~\"k8s_metad_metad.*|k8s_storaged_storaged.*|k8s_graphd_graphd.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
           "interval": "5s",
           "legendFormat": "{{name}}",
           "refId": "A"
@@ -518,14 +515,14 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum (rate (container_network_receive_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+          "expr": "sum (rate (container_network_receive_bytes_total{name=~\"k8s_POD_metad.*|k8s_POD_storaged.*|k8s_POD_graphd.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
           "instant": false,
           "interval": "10s",
           "legendFormat": "->{{name}}",
           "refId": "A"
         },
         {
-          "expr": "- sum (rate (container_network_transmit_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+          "expr": "- sum (rate (container_network_transmit_bytes_total{name=~\"k8s_POD_metad.*|k8s_POD_storaged.*|k8s_POD_graphd.*\", namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
           "interval": "10s",
           "legendFormat": "<-{{name}}",
           "refId": "B"
@@ -551,7 +548,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "decbytes",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -619,13 +616,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(container_network_receive_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])",
+          "expr": "rate(container_network_receive_bytes_total{name=~\"k8s_POD_metad.*|k8s_POD_storaged.*|k8s_POD_graphd.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])",
           "interval": "10s",
           "legendFormat": "Recived",
           "refId": "A"
         },
         {
-          "expr": "- rate (container_network_transmit_bytes_total{name=~\"k8s_POD_nebula-graphd.*|k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])",
+          "expr": "- rate (container_network_transmit_bytes_total{name=~\"k8s_POD_metad.*|k8s_POD_storaged.*|k8s_POD_graphd.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])",
           "interval": "10s",
           "legendFormat": "Sent",
           "refId": "B"
@@ -651,7 +648,7 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "format": "bytes",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -719,8 +716,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_go_latency_count_60{namespace=\"NEBULA_NAMESPACE\"}",
-          "interval": "10s",
+          "expr": "nebula_graphd_go_latency_count_60{nebula_namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "60s",
           "legendFormat": "",
           "refId": "A"
         }
@@ -771,7 +768,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -813,8 +810,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_edge_latency_count_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
-          "interval": "10s",
+          "expr": "nebula_graphd_insert_vertex_qps_count_60{namespace=\"NEBULA_NAMESPACE\"}",
+          "interval": "",
           "legendFormat": "",
           "refId": "A"
         }
@@ -907,7 +904,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_vertex_latency_count_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_insert_edge_qps_count_60{namespace=\"NEBULA_NAMESPACE\"}",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1001,7 +998,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_edge_latency_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_insert_vertex_latency_avg_60{namespace=\"NEBULA_NAMESPACE\"}/1000",
           "interval": "60s",
           "legendFormat": "",
           "refId": "A"
@@ -1095,7 +1092,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_go_latency_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_go_latency_avg_60{namespace=\"NEBULA_NAMESPACE\"}/1000",
           "interval": "60s",
           "legendFormat": "",
           "refId": "A"
@@ -1189,7 +1186,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_go_qps_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_go_qps_avg_60{namespace=\"NEBULA_NAMESPACE\"}",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1241,7 +1238,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1283,7 +1280,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_vertex_latency_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_insert_vertex_latency_avg_60{namespace=\"NEBULA_NAMESPACE\"}/1000",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1335,7 +1332,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {}
@@ -1377,7 +1374,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_vertex_qps_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_insert_vertex_qps_avg_60{namespace=\"NEBULA_NAMESPACE\"}/1000",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1471,7 +1468,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "nebula_graphd_insert_edge_qps_avg_60{kubernetes_namespace=\"NEBULA_NAMESPACE\"}",
+          "expr": "nebula_graphd_insert_edge_qps_avg_60{namespace=\"NEBULA_NAMESPACE\"}",
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -1565,7 +1562,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "container_fs_usage_bytes{namespace=\"NEBULA_NAMESPACE\",device=\"/dev/vda1\",name=~\"k8s_POD_nebula-metad.*|k8s_POD_nebula-storaged.*\"}",
+          "expr": "container_fs_usage_bytes{namespace=\"NEBULA_NAMESPACE\",device=\"/dev/vda1\",name=~\"k8s_storaged.*|k8s_metad.*\"}",
           "interval": "10s",
           "legendFormat": "",
           "refId": "A"
@@ -1625,10 +1622,10 @@
     "to": "now"
   },
   "timepicker": {
-    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
   },
   "timezone": "browser",
   "title": "nebula",
-  "uid": "97I8NYLWk",
-  "version": 2
+  "uid": "nebula",
+  "version": 4
 }
