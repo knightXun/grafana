@@ -83,8 +83,6 @@ func (dr *dashboardServiceImpl) GetProvisionedDashboardDataByDashboardID(dashboa
 }
 
 func (dr *dashboardServiceImpl) buildSaveDashboardCommand(dto *SaveDashboardDTO, validateAlerts bool, validateProvisionedDashboard bool) (*models.SaveDashboardCommand, error) {
-	dr.log.Info("buildSaveDashboardCommand Step 1")
-
 	dash := dto.Dashboard
 
 	dash.Title = strings.TrimSpace(dash.Title)
@@ -130,8 +128,6 @@ func (dr *dashboardServiceImpl) buildSaveDashboardCommand(dto *SaveDashboardDTO,
 		Dashboard: dash,
 		Overwrite: dto.Overwrite,
 	}
-
-	dr.log.Info("buildSaveDashboardCommand Step 2")
 
 	if err := bus.Dispatch(&validateBeforeSaveCmd); err != nil {
 		return nil, err
