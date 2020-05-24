@@ -12,6 +12,35 @@ import (
 	"time"
 )
 
+func QueryInstances(instance string) (int64, int64, error) {
+	logger.Info("Query Instance", "id", instance)
+	userQuery := models.GetUserByLoginQuery{LoginOrEmail: instance}
+
+	if err := bus.Dispatch(&userQuery); err != nil {
+		logger.Info("Query User "+instance+" Failed ", "err", err.Error())
+		return 0, 0, err
+	}
+
+	orgQuery := models.GetOrgByNameQuery{
+		Name: instance,
+	}
+
+	if err := bus.Dispatch(&orgQuery); err != nil {
+		logger.Info("Query Org "+instance+" Failed: ", "err", err.Error())
+		return 0, 0, err
+	}
+
+	if orgQuery.Result == nil {
+		logger.Info("Query Org " + instance + " Not Found !")
+		return 0, 0, fmt.Errorf("Query Org " + instance + " Not Found !")
+	}
+
+	user := userQuery.Result
+
+	logger.Info("Query Instance Success!")
+	return user.Id, userQuery.Result.OrgId, nil
+}
+
 // POST /instances/:instance  (create instances in grafana for nebula)
 func CreateInstances(c *models.ReqContext) Response {
 	instance := c.Params(":instanceID")
