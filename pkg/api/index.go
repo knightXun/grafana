@@ -422,10 +422,13 @@ func (hs *HTTPServer) setIndexViewData(c *models.ReqContext) (*dtos.IndexViewDat
 			Url:          setting.AppSubUrl + "/profile",
 			HideFromMenu: true,
 			SortWeight:   dtos.WeightProfile,
-			Children: []*dtos.NavLink{
-				{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"},
-				{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true},
-			},
+		}
+
+		if c.OrgRole != models.ROLE_VIEWER {
+			profileNode.Children = append(profileNode.Children,
+				&dtos.NavLink{Text: "Change Password", Id: "change-password", Url: setting.AppSubUrl + "/profile/password", Icon: "lock", HideFromMenu: true})
+			profileNode.Children = append(profileNode.Children,
+				&dtos.NavLink{Text: "Preferences", Id: "profile-settings", Url: setting.AppSubUrl + "/profile", Icon: "sliders-v-alt"})
 		}
 
 		if !setting.DisableSignoutMenu {
