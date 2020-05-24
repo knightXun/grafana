@@ -60,6 +60,7 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
 EXPOSE 3000
 
 COPY nebula.json /
+COPY datasources.yaml "$GF_PATHS_PROVISIONING/datasources"
 COPY ./run.sh /run.sh
 
 USER grafana

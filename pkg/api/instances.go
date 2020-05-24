@@ -64,6 +64,15 @@ func CreateInstances(c *models.ReqContext) Response {
 	}
 
 	logger.Info("Create Dashboard Success")
+
+	err = createDataSource(instance)
+
+	if err != nil {
+		return Error(500, "Failed to Create DataSources", err)
+	}
+
+	logger.Info("Create DataSource Success")
+
 	return JSON(200, map[string]string{})
 }
 
@@ -145,6 +154,39 @@ func createFolder(instance string) (int64, error) {
 	return cmd.Result.Id, nil
 }
 
+func createDataSource(orgname string) error {
+	orgQuery := models.GetOrgByNameQuery{
+		Name: orgname,
+	}
+
+	if err := bus.Dispatch(&orgQuery); err != nil {
+		logger.Info("Query Org "+orgname+" Failed: ", "err", err.Error())
+		return err
+	}
+
+	if orgQuery.Result == nil {
+		logger.Info("Query Org " + orgname + " Not Found !")
+		return fmt.Errorf("Query Org " + orgname + " Not Found !")
+	}
+
+	cmd := models.AddDataSourceCommand{}
+	cmd.OrgId = orgQuery.Result.Id
+	cmd.Name = "Prometheus"
+	cmd.Url = "http://prometheus.kube-system.svc.cluster.local:9090"
+	cmd.Type = "prometheus"
+	cmd.Access = "proxy"
+
+	err := bus.Dispatch(&cmd)
+
+	if err != nil {
+		logger.Error("Create Prometheus DataSources Failed")
+		return err
+	}
+
+	logger.Info("Create DataSource " + cmd.Result.Name + " Success!")
+	return nil
+}
+
 func createDashboard(orgname, username string) error {
 	userQuery := models.GetUserByLoginQuery{LoginOrEmail: username}
 
@@ -224,7 +266,13 @@ func DeleteInstances(c *models.ReqContext) Response {
 	instance := c.Params(":instanceID")
 	logger.Info("Delete Instance", "id", instance)
 
-	err := deleteInstanceDashboard(instance)
+	err := deleteDataSource(instance)
+	if err != nil {
+		return Error(500, "Delete DataSource Failed", err)
+	}
+
+	logger.Info("Delete DataSource Success")
+	err = deleteInstanceDashboard(instance)
 	if err != nil {
 		return Error(500, "Delete Dashboard Failed", err)
 	}
@@ -240,6 +288,44 @@ func DeleteInstances(c *models.ReqContext) Response {
 	}
 
 	return JSON(200, map[string]string{})
+}
+
+func deleteDataSource(orgname string) error {
+	orgQuery := models.GetOrgByNameQuery{
+		Name: orgname,
+	}
+
+	if err := bus.Dispatch(&orgQuery); err != nil {
+		logger.Info("Query Org "+orgname+" Failed: ", "err", err.Error())
+		return err
+	}
+
+	if orgQuery.Result == nil {
+		logger.Info("Query Org " + orgname + " Not Found !")
+		return fmt.Errorf("Query Org " + orgname + " Not Found !")
+	}
+
+	getCmd := &models.GetDataSourceByNameQuery{Name: "Prometheus", OrgId: orgQuery.Result.Id}
+	if err := bus.Dispatch(getCmd); err != nil {
+		if err == models.ErrDataSourceNotFound {
+			logger.Error("DataSource Not Found")
+			return err
+		}
+		return err
+	}
+
+	if getCmd.Result.ReadOnly {
+		return fmt.Errorf("Have No this DataSource Right")
+	}
+
+	cmd := &models.DeleteDataSourceByNameCommand{Name: "Prometheus", OrgId: orgQuery.Result.Id}
+	err := bus.Dispatch(cmd)
+	if err != nil {
+		logger.Error("Delete DataSource Failed")
+		return err
+	}
+
+	return nil
 }
 
 func deleteUser(instance string) error {
