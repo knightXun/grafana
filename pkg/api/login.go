@@ -110,7 +110,7 @@ func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
 		Message string `json:"message"`
 
 		Data []struct {
-			InstanceID string `json:"instanceID""`
+			InstanceID string `json:"instanceID"`
 		} `json:"data"`
 	}{}
 
