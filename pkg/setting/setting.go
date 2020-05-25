@@ -229,7 +229,8 @@ type Cfg struct {
 	AppSubUrl        string
 	ServeFromSubPath bool
 
-	CloudAuthUrl string
+	DashboardPath string
+	CloudAuthUrl  string
 	// Paths
 	ProvisioningPath   string
 	DataPath           string
@@ -633,6 +634,8 @@ func (cfg *Cfg) Load(args *CommandLineArgs) error {
 	cloud_http_url := os.Getenv("CLOUD_HTTP_URL")
 
 	cfg.CloudAuthUrl = cloud_http_url
+
+	cfg.DashboardPath = os.Getenv("CONF_PATH")
 
 	Env, err = valueAsString(iniFile.Section(""), "app_mode", "development")
 	if err != nil {

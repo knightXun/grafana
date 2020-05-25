@@ -9,6 +9,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/search"
 	"github.com/grafana/grafana/pkg/services/sqlstore"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -211,7 +212,8 @@ func createDashboard(orgname, username string) error {
 
 	user := userQuery.Result
 
-	dashboard, err := plugins.CreateDashboardFromFile("/", "nebula.json", username)
+	confPath := os.Getenv("CONF_PATH")
+	dashboard, err := plugins.CreateDashboardFromFile(confPath, username)
 	dashboard.Data.Set("title", username)
 	dashboard.Data.Set("uid", username)
 	dashboard.Title = username

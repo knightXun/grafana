@@ -81,7 +81,7 @@ func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
 		Timeout: time.Second * 10,
 	}
 
-	request, err := http.NewRequest("POST", auth_url, nil)
+	request, err := http.NewRequest("GET", auth_url, nil)
 	if err != nil {
 		hs.log.Info("Make Cloud Auth Request Failed: " + err.Error())
 		c.Handle(404, "Auth Failed", nil)

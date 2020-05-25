@@ -115,10 +115,9 @@ func loadPluginDashboard(pluginId, path string) (*models.Dashboard, error) {
 	return models.NewDashboardFromJson(data), nil
 }
 
-func CreateDashboardFromFile(pluginDir, path, uid string) (*models.Dashboard, error) {
+func CreateDashboardFromFile(path, uid string) (*models.Dashboard, error) {
 
-	dashboardFilePath := filepath.Join(pluginDir, path)
-	content, err := ioutil.ReadFile(dashboardFilePath)
+	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
