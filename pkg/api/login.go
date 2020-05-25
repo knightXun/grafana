@@ -3,7 +3,9 @@ package api
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -60,6 +62,126 @@ func (hs *HTTPServer) CookieOptionsFromCfg() middleware.CookieOptions {
 		SameSiteDisabled: hs.Cfg.CookieSameSiteDisabled,
 		SameSiteMode:     hs.Cfg.CookieSameSiteMode,
 	}
+}
+
+func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
+	token := c.Params(":token")
+	instance := c.Params(":instanceID")
+
+	userID, orgID, err := QueryInstances(instance)
+	if err != nil {
+		hs.log.Info("Not Found" + err.Error())
+		c.Handle(404, "Not Found", nil)
+		return
+	}
+
+	auth_url := hs.Cfg.CloudAuthUrl
+
+	httpClient := http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	request, err := http.NewRequest("POST", auth_url, nil)
+	if err != nil {
+		hs.log.Info("Make Cloud Auth Request Failed: " + err.Error())
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	request.Header.Add("Authorization", "Bearer "+token)
+	request.Header.Add("Content-Type", "application/json")
+
+	response, err := httpClient.Do(request)
+
+	if err != nil {
+		hs.log.Info("Do Cloud Auth Request Failed: " + err.Error())
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	if response.StatusCode < 200 || response.StatusCode > 300 {
+		hs.log.Info("Do Cloud Auth Request Failed: ErrorCode is ", response.StatusCode)
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	data := struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+
+		Data []struct {
+			InstanceID string `json:"instanceID""`
+		} `json:"data"`
+	}{}
+
+	responseBody, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		hs.log.Info("Read Auth Server Response Body Failed", "error", err.Error())
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	err = json.Unmarshal(responseBody, &data)
+	if err != nil {
+		hs.log.Info("Marshal Auth Response Body Failed", "error", err.Error())
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	if data.Code != 0 {
+		hs.log.Info("Auth Server Response Code !=0 ", "Auth Server Response Message", data.Message)
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	found := false
+	for _, ins := range data.Data {
+		if ins.InstanceID == instance {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		hs.log.Info("Auth Server Response Does't contains: ", "instance", instance)
+		c.Handle(404, "Auth Failed", nil)
+		return
+	}
+
+	viewData, err := setIndexTokenViewData(hs, c, userID, orgID)
+	if err != nil {
+		c.Handle(500, "Failed to get settings", err)
+		return
+	}
+
+	enabledOAuths := make(map[string]interface{})
+	for key, oauth := range setting.OAuthService.OAuthInfos {
+		enabledOAuths[key] = map[string]string{"name": oauth.Name}
+	}
+
+	viewData.Settings["oauth"] = enabledOAuths
+	viewData.Settings["samlEnabled"] = hs.License.HasValidLicense() && hs.Cfg.SAMLEnabled
+
+	if loginError, ok := tryGetEncryptedCookie(c, LoginErrorCookieName); ok {
+		middleware.DeleteCookie(c.Resp, LoginErrorCookieName, hs.CookieOptionsFromCfg)
+		viewData.Settings["loginError"] = loginError
+		c.HTML(200, getViewIndex(), viewData)
+		return
+	}
+
+	hs.log.Info("Auth Users Done")
+
+	user := &models.User{Id: userID, Email: c.SignedInUser.Email, Login: instance}
+	err = hs.loginUserWithUser(user, c)
+	if err != nil {
+		hs.log.Info("Auth User Login Failed: ", err.Error())
+		c.Handle(500, "Failed to sign in user", err)
+		return
+	}
+
+	hs.log.Info("Handle Login Requests Done")
+	c.Redirect(setting.AppSubUrl + "/")
 }
 
 func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
