@@ -511,7 +511,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum (rate (container_cpu_usage_seconds_total{name=~\"k8s_metad_metad.*|k8s_storaged_storaged.*|k8s_graphd_graphd.*\",namespace=\"NEBULA_NAMESPACE\"}[2m])) by (name)",
+              "expr": "sum (rate (container_cpu_usage_seconds_total{name=~\"k8s_metad_metad.*|k8s_storaged_storaged.*|k8s_graphd_graphd.*\",namespace=\"NEBULA_NAMESPACE\"}[2m]) * 500 ) by (name)",
               "interval": "5s",
               "legendFormat": "{{name}}",
               "refId": "A"
