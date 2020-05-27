@@ -31,7 +31,7 @@ spec:
               protocol: TCP
           env:
             - name: CLOUD_HTTP_URL
-              value: http://172.20.26.98:8880/xxxxx/
+              value: http://121.199.79.186:7002/api/services
             - name: NEBULA_NAMESPACE
               value: nebula-monitor
             - name: GF_SERVER_HTTP_PORT

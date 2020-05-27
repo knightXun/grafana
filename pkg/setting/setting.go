@@ -253,6 +253,9 @@ type Cfg struct {
 	CookieSameSiteDisabled           bool
 	CookieSameSiteMode               http.SameSite
 
+	//Disable RestulAPI
+	DisableRestfulAPI bool
+
 	TempDataLifetime                 time.Duration
 	MetricsEndpointEnabled           bool
 	MetricsEndpointBasicAuthUsername string
@@ -848,9 +851,10 @@ func (cfg *Cfg) Load(args *CommandLineArgs) error {
 
 	LoginCookieName, err = valueAsString(auth, "login_cookie_name", "grafana_session")
 	cfg.LoginCookieName = LoginCookieName
-	if err != nil {
-		return err
-	}
+
+	disableRestfulAPI := auth.Key("disable_restful_api").MustBool(true)
+	cfg.DisableRestfulAPI = disableRestfulAPI
+
 	cfg.LoginMaxInactiveLifetimeDays = auth.Key("login_maximum_inactive_lifetime_days").MustInt(7)
 
 	LoginMaxLifetimeDays = auth.Key("login_maximum_lifetime_days").MustInt(30)

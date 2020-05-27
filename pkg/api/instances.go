@@ -10,6 +10,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/sqlstore"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -44,10 +45,22 @@ func QueryInstances(instance string) (int64, int64, error) {
 
 // POST /instances/:instance  (create instances in grafana for nebula)
 func CreateInstances(c *models.ReqContext) Response {
+
+	//先做个简单的验证
+	if c.Req.Request.Header.Get("Auth") != "xxxxsaaassssq12999345334qwwwajnsc03331134xsssssssx" {
+		return Error(400, "Auth Failed", nil)
+	}
 	instance := c.Params(":instanceID")
+	if instance == "" {
+		return Error(400, "Auth Failed", nil)
+	}
+
 	logger.Info("Create Instance", "id", instance)
 	err := createOrg(instance)
 	if err != nil {
+		if !strings.Contains(err.Error(), "is taken") {
+			return JSON(200, map[string]string{})
+		}
 		return Error(500, "Failed to Create Org", err)
 	}
 
@@ -265,7 +278,16 @@ func createDashboard(orgname, username string) error {
 
 // DELETE /instances/:instance  (Delete instances in grafana for nebula)
 func DeleteInstances(c *models.ReqContext) Response {
+	//先做个简单的验证
+	if c.Req.Request.Header.Get("Auth") != "xxxxsaaassssq12999345334qwwwajnsc03331134xsssssssx" {
+		return Error(400, "Auth Failed", nil)
+	}
+
 	instance := c.Params(":instanceID")
+	if instance == "" {
+		return Error(400, "Auth Failed", nil)
+	}
+
 	logger.Info("Delete Instance", "id", instance)
 
 	err := deleteDataSource(instance)

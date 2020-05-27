@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -111,6 +110,7 @@ func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
 
 		Data []struct {
 			InstanceID string `json:"instanceID"`
+			ServiceId  string `json:"serviceId"`
 		} `json:"data"`
 	}{}
 
@@ -137,7 +137,7 @@ func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
 
 	found := false
 	for _, ins := range data.Data {
-		if ins.InstanceID == instance {
+		if ins.InstanceID == instance || ins.ServiceId == instance {
 			found = true
 			break
 		}
@@ -145,85 +145,6 @@ func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
 
 	if !found {
 		hs.log.Info("Auth Server Response Does't contains: ", "instance", instance)
-		c.Handle(404, "Auth Failed", nil)
-		return
-	}
-
-	viewData, err := setIndexTokenViewData(hs, c, userID, orgID)
-	if err != nil {
-		c.Handle(500, "Failed to get settings", err)
-		return
-	}
-
-	enabledOAuths := make(map[string]interface{})
-	for key, oauth := range setting.OAuthService.OAuthInfos {
-		enabledOAuths[key] = map[string]string{"name": oauth.Name}
-	}
-
-	viewData.Settings["oauth"] = enabledOAuths
-	viewData.Settings["samlEnabled"] = hs.License.HasValidLicense() && hs.Cfg.SAMLEnabled
-
-	if loginError, ok := tryGetEncryptedCookie(c, LoginErrorCookieName); ok {
-		middleware.DeleteCookie(c.Resp, LoginErrorCookieName, hs.CookieOptionsFromCfg)
-		viewData.Settings["loginError"] = loginError
-		c.HTML(200, getViewIndex(), viewData)
-		return
-	}
-
-	hs.log.Info("Auth Users Done")
-
-	user := &models.User{Id: userID, Email: c.SignedInUser.Email, Login: instance}
-	err = hs.loginUserWithUser(user, c)
-	if err != nil {
-		hs.log.Info("Auth User Login Failed: ", err.Error())
-		c.Handle(500, "Failed to sign in user", err)
-		return
-	}
-
-	hs.log.Info("Handle Login Requests Done")
-	c.Redirect(setting.AppSubUrl + "/")
-}
-
-func (hs *HTTPServer) LoginViewWithToken(c *models.ReqContext) {
-	userName := c.Params(":userName")
-	token := c.Params(":token")
-
-	instance := c.Params(":instanceID")
-
-	userID, orgID, err := QueryInstances(instance)
-	if err != nil {
-		hs.log.Info("Not Found" + err.Error())
-		c.Handle(404, "Not Found", nil)
-		return
-	}
-
-	auth_url := hs.Cfg.CloudAuthUrl
-
-	httpClient := http.Client{
-		Timeout: time.Second * 10,
-	}
-
-	request, err := http.NewRequest("POST", auth_url, nil)
-	if err != nil {
-		hs.log.Info("Make Cloud Auth Request Failed: " + err.Error())
-		c.Handle(404, "Auth Failed", nil)
-		return
-	}
-
-	userAndPasswd := userName + ":" + token
-	request.Header.Add("Authorization", "Nebula "+base64.StdEncoding.EncodeToString([]byte(userAndPasswd)))
-	request.Header.Add("Content-Type", "application/json")
-
-	response, err := httpClient.Do(request)
-
-	if err != nil {
-		hs.log.Info("Do Cloud Auth Request Failed: " + err.Error())
-		c.Handle(404, "Auth Failed", nil)
-		return
-	}
-
-	if response.StatusCode < 200 || response.StatusCode > 300 {
-		hs.log.Info("Do Cloud Auth Request Failed: ErrorCode is ", response.StatusCode)
 		c.Handle(404, "Auth Failed", nil)
 		return
 	}

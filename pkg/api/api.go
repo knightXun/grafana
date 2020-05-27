@@ -28,7 +28,6 @@ func (hs *HTTPServer) registerRoutes() {
 	r.Post("/login", quota("session"), bind(dtos.LoginCommand{}), Wrap(hs.LoginPost))
 	r.Get("/login/:name", quota("session"), hs.OAuthLogin)
 	r.Get("/login", hs.LoginView)
-	r.Get("/login/:instanceID/:username/:token", hs.LoginViewWithToken)
 	r.Get("/login/:instanceID/:token", hs.LoginViewWithCloudToken)
 	r.Get("/invite/:code", hs.Index)
 
