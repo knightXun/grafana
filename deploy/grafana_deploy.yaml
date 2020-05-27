@@ -1464,7 +1464,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "nebula_graphd_insert_vertex_qps_avg_60{namespace=\"NEBULA_NAMESPACE\"}/1000",
+              "expr": "nebula_graphd_insert_vertex_qps_avg_60{namespace=\"NEBULA_NAMESPACE\"}",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
