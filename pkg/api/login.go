@@ -181,7 +181,7 @@ func (hs *HTTPServer) LoginViewWithCloudToken(c *models.ReqContext) {
 	}
 
 	hs.log.Info("Handle Login Requests Done")
-	c.Redirect(setting.AppSubUrl + "/")
+	c.Redirect(setting.AppSubUrl + "/d/" + instance)
 }
 
 func (hs *HTTPServer) LoginView(c *models.ReqContext) {
