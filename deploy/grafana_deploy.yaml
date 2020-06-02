@@ -1698,7 +1698,7 @@ data:
       ],
       "refresh": false,
       "schemaVersion": 25,
-      "style": "dark",
+      "style": "light",
       "tags": [],
       "templating": {
         "list": []
