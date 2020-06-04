@@ -1836,7 +1836,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(container_fs_usage_bytes{namespace=\"NEBULA_NAMESPACE\",container=~\"metad|storaged\"})  by(container, namespace) /(1024*1024)",
+              "expr": "sum(kubelet_volume_stats_capacity_bytes{namespace=\"NEBULA_NAMESPACE\"}-kubelet_volume_stats_available_bytes{namespace=\"NEBULA_NAMESPACE\"}) by (persistentvolumeclaim) /(1024*1024)",
               "interval": "10s",
               "legendFormat": "",
               "refId": "A"
